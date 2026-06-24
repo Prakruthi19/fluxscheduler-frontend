@@ -8,14 +8,11 @@ export interface ClusterState {
   jobs: Job[];
   metrics: ClusterMetrics | null;
   connected: boolean;
-  lastUpdate: number | null;  // unix ms
+  lastUpdate: number | null;
 }
 
-const WS_URL = (process.env.REACT_APP_API_URL || "http://localhost:8000")
-  .replace(/^http/, "ws") + "/ws";
-
-const RECONNECT_DELAY_MS = 2000;
-const MAX_RECONNECT_DELAY = 15000;
+const BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
+const POLL_MS = 2000;
 
 // ── Hook ───────────────────────────────────────────────────────────────────
 
@@ -28,85 +25,38 @@ export function useClusterSocket(): [ClusterState, () => void] {
     lastUpdate: null,
   });
 
-  const wsRef          = useRef<WebSocket | null>(null);
-  const reconnectDelay = useRef(RECONNECT_DELAY_MS);
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const unmounted      = useRef(false);
+  const unmounted = useRef(false);
 
-  const connect = useCallback(() => {
-    if (unmounted.current) return;
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
-
-    const ws = new WebSocket(WS_URL);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      if (unmounted.current) return;
-      reconnectDelay.current = RECONNECT_DELAY_MS; // reset backoff
-      setState((s) => ({ ...s, connected: true }));
-    };
-
-    ws.onmessage = (event) => {
-      if (unmounted.current) return;
-      try {
-        const data = JSON.parse(event.data);
-        setState((s) => ({
-          ...s,
-          nodes:      data.nodes   ?? s.nodes,
-          jobs:       data.jobs    ?? s.jobs,
-          metrics:    data.metrics ?? s.metrics,
-          lastUpdate: Date.now(),
-        }));
-      } catch (e) {
-        console.warn("WS parse error", e);
-      }
-    };
-
-    ws.onclose = () => {
-      if (unmounted.current) return;
-      setState((s) => ({ ...s, connected: false }));
-      // Exponential backoff reconnect
-      reconnectTimer.current = setTimeout(() => {
-        reconnectDelay.current = Math.min(
-          reconnectDelay.current * 1.5,
-          MAX_RECONNECT_DELAY
-        );
-        connect();
-      }, reconnectDelay.current);
-    };
-
-    ws.onerror = () => {
-      ws.close(); // triggers onclose → reconnect
-    };
-  }, []);
-
-  // Manual refresh — for after mutations (submit job, seed, etc.)
-  const forceRefresh = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     try {
       const [nodes, jobs, metrics] = await Promise.all([
-        fetch((process.env.REACT_APP_API_URL || "http://localhost:8000") + "/api/nodes").then(r => r.json()),
-        fetch((process.env.REACT_APP_API_URL || "http://localhost:8000") + "/api/jobs").then(r => r.json()),
-        fetch((process.env.REACT_APP_API_URL || "http://localhost:8000") + "/api/metrics").then(r => r.json()),
+        fetch(`${BASE}/api/nodes`).then((r) => r.json()),
+        fetch(`${BASE}/api/jobs`).then((r) => r.json()),
+        fetch(`${BASE}/api/metrics`).then((r) => r.json()),
       ]);
-      setState((s) => ({
-        ...s,
+      if (unmounted.current) return;
+      setState({
         nodes,
         jobs,
         metrics,
+        connected: true,
         lastUpdate: Date.now(),
-      }));
-    } catch {}
+      });
+    } catch {
+      if (!unmounted.current)
+        setState((s) => ({ ...s, connected: false }));
+    }
   }, []);
 
   useEffect(() => {
     unmounted.current = false;
-    connect();
+    fetchAll();
+    const id = setInterval(fetchAll, POLL_MS);
     return () => {
       unmounted.current = true;
-      clearTimeout(reconnectTimer.current);
-      wsRef.current?.close();
+      clearInterval(id);
     };
-  }, [connect]);
+  }, [fetchAll]);
 
-  return [state, forceRefresh];
+  return [state, fetchAll];
 }
