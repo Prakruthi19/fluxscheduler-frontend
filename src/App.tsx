@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./App.css";
 import * as api from "./api";
-import GanttModal from "./GanttModal";
-import ComparePanel from "./ComparePanel";
-import NodeModal from "./NodeModal";
-import Sparkline from "./Sparkline";
-import { useSparklines } from "./useSparklines";
-import { useClusterSocket } from "./useClusterSocket";
+import GanttModal from "./components/GanttModal";
+import ComparePanel from "./components/ComparePanel";
+import NodeModal from "./components/NodeModal";
+import { useSparklines } from "./hooks/useSparklines";
+import { useClusterSocket } from "./hooks/useClusterSocket";
 import type {
   Node,
   Job,
@@ -139,7 +138,7 @@ export default function App() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [histFilter, setHistFilter] = useState<"all" | "pending" | "running" | "completed" | "failed">("all");
-  const toastTimer            = useRef<ReturnType<typeof setTimeout>>();
+  const toastTimer            = useRef<ReturnType<typeof setTimeout>>(undefined);
   const autoRetried             = useRef<Set<string>>(new Set());
   const sparkHistory          = useSparklines(nodes);
   const prevJobIds            = useRef<Set<string>>(new Set());
