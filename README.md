@@ -116,5 +116,5 @@ Set `REACT_APP_API_URL` in Vercel's environment variable settings to your backen
 
 ## Related
 
-- **[fluxscheduler-backend](https://github.com/prakruthi/fluxscheduler-backend)** — FastAPI control plane with 4 scheduling algorithms, WebSocket broadcast, and REST API
-- **[distributed-scheduler](https://github.com/prakruthi/distributed-scheduler)** — original Go/gRPC prototype this was built from
+- **[fluxscheduler-backend](https://github.com/Prakruthi19/fluxscheduler-backend)** — FastAPI control plane with 4 scheduling algorithms, WebSocket broadcast, and REST API
+- **[distributed-scheduler](https://github.com/Prakruthi19/distributed-scheduler)** — original Go/gRPC prototype this was built from
