@@ -1,7 +1,7 @@
 # FluxScheduler — Frontend
 
-React + TypeScript dashboard for [FluxScheduler](https://github.com/prakruthi/fluxscheduler-backend), a distributed job scheduler for AI workloads.
-
+React + TypeScript dashboard for [FluxScheduler](https://github.com/Prakruthi19/fluxscheduler-backend), a distributed job scheduler for AI workloads.
+[Deployed Link](https://fluxscheduler-frontend.vercel.app/)
 Built by **Prakruthi** — M.S. Computer Science, George Washington University.
 
 ---
@@ -38,7 +38,7 @@ Real-time cluster control plane UI. Connects to the FluxScheduler backend over W
 
 ## Getting started
 
-**Prerequisites:** Node 18+, and the [FluxScheduler backend](https://github.com/prakruthi/fluxscheduler-backend) running on port 8000.
+**Prerequisites:** Node 18+, and the [FluxScheduler backend](https://github.com/Prakruthi19/fluxscheduler-backend) running on port 8000.
 
 ```bash
 git clone https://github.com/prakruthi/fluxscheduler-frontend
