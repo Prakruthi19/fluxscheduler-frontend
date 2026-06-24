@@ -1,7 +1,9 @@
 # FluxScheduler — Frontend
 
 React + TypeScript dashboard for [FluxScheduler](https://github.com/Prakruthi19/fluxscheduler-backend), a distributed job scheduler for AI workloads.
+
 [Deployed Link](https://fluxscheduler-frontend.vercel.app/)
+
 Built by **Prakruthi** — M.S. Computer Science, George Washington University.
 
 ---
