@@ -1,46 +1,120 @@
-# Getting Started with Create React App
+# FluxScheduler — Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React + TypeScript dashboard for [FluxScheduler](https://github.com/prakruthi/fluxscheduler-backend), a distributed job scheduler for AI workloads.
 
-## Available Scripts
+Built by **Prakruthi** — M.S. Computer Science, George Washington University.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## What it does
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Real-time cluster control plane UI. Connects to the FluxScheduler backend over WebSocket and renders live cluster state — no polling, server pushes every 2 seconds.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+**Features**
 
-### `npm test`
+- **Live cluster dashboard** — node health, utilization bars, job counts, cost metrics
+- **Job submission** — submit jobs with custom resource requirements (CPU, memory, GPU VRAM)
+- **⚡ Simulate Load** — fires 6 realistic AI jobs (LLM inference, embedding, fine-tuning, data pipeline) across the cluster to demo scheduling in action
+- **Strategy selector** — switch between `cheapest_fit`, `best_fit`, `worst_fit`, `first_fit` live
+- **Strategy Comparison panel** — dry-runs all 4 strategies against current jobs, shows per-job node placement and cost diff without making any assignments
+- **Gantt timeline modal** — click any job to see wall-clock timeline of all jobs across nodes, with hover tooltips and a live "now" cursor
+- **Node metrics modal** — click any node to see CPU/memory/GPU sparklines (60-point rolling history), current resource bars, and running jobs
+- **Job retry** — manually fail jobs, auto-retries once after 10s, manual retry after that
+- **Job history** — full session audit trail with status filters
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## Stack
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+| Layer | Tech |
+|---|---|
+| Framework | React 18 + TypeScript |
+| State | WebSocket push via custom `useClusterSocket` hook |
+| Charts | Pure SVG — no charting library |
+| Styling | CSS custom properties, no UI framework |
+| Deploy | Vercel |
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Getting started
 
-### `npm run eject`
+**Prerequisites:** Node 18+, and the [FluxScheduler backend](https://github.com/prakruthi/fluxscheduler-backend) running on port 8000.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```bash
+git clone https://github.com/prakruthi/fluxscheduler-frontend
+cd fluxscheduler-frontend
+npm install
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Create a `.env` file:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```
+REACT_APP_API_URL=http://localhost:8000
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Start the dev server:
 
-## Learn More
+```bash
+npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Open [http://localhost:3000](http://localhost:3000).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
+
+## Quick demo
+
+1. Make sure the backend is running — `uvicorn app:app --reload --port 8000`
+2. Click **Seed Demo** — registers 3 worker nodes (2 GPU, 1 CPU)
+3. Click **⚡ Simulate Load** — submits 6 jobs, watch the scheduler assign them within 3 seconds
+4. Click **▼ Run Comparison** — see which strategy is cheapest for the current workload
+5. Click any node card → sparklines modal
+6. Click any job row → Gantt timeline modal
+7. Click `✗` on a running job → watch auto-retry fire after 10 seconds
+
+---
+
+## Project structure
+
+```
+src/
+├── App.tsx               # Main dashboard, all layout and state wiring
+├── App.css               # Design tokens and all component styles
+├── api.ts                # Typed API client (REST + WebSocket URLs)
+├── useClusterSocket.ts   # WebSocket hook with exponential backoff reconnect
+├── useSparklines.ts      # Rolling metric history hook (60-point buffer per node)
+├── Sparkline.tsx         # Pure SVG sparkline component (CPU/MEM/GPU)
+├── GanttModal.tsx        # Job timeline modal (wall clock, all nodes)
+├── NodeModal.tsx         # Node metrics modal (sparklines + resource bars)
+├── ComparePanel.tsx      # Collapsible strategy comparison panel
+├── index.tsx             # React entry point
+└── index.css             # Google Fonts import
+```
+
+---
+
+## Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `REACT_APP_API_URL` | `http://localhost:8000` | Backend base URL (HTTP + WS) |
+
+For production set this to your deployed backend URL in `.env.production`.
+
+---
+
+## Deploying to Vercel
+
+```bash
+npm run build
+vercel --prod
+```
+
+Set `REACT_APP_API_URL` in Vercel's environment variable settings to your backend URL (Railway, Render, etc.).
+
+---
+
+## Related
+
+- **[fluxscheduler-backend](https://github.com/prakruthi/fluxscheduler-backend)** — FastAPI control plane with 4 scheduling algorithms, WebSocket broadcast, and REST API
+- **[distributed-scheduler](https://github.com/prakruthi/distributed-scheduler)** — original Go/gRPC prototype this was built from
